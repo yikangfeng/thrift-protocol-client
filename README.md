@@ -1,3 +1,14 @@
 # thrift-protocol-client
 一个支持thrift协议的客户端工程，支持负载均衡、failover、异步连接池、异步调用模式等。
 jdk version:jdk1.7+
+
+build service to client example:
+
+	final ThriftProtocolService<ThriftClientRequest, byte[]> serve = ThriftProtocolClientBuilder
+				.safeBuild(ThriftProtocolClientBuilder
+						.get()
+						.codec(FACTORY)
+						.dest("zk!bw-kvm-cy-01.dns.ganji.com:2181!/soa/services/as.postlimitservice.thrift!0")
+						.hostConnectionLimit(2)
+						.logger(LoggerFactory
+								.getLogger("thrift-post-limit-service-client")));
