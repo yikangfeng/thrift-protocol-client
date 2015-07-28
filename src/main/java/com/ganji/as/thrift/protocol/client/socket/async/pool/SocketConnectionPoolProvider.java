@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.LockSupport;
 
 import org.slf4j.Logger;
 
@@ -176,19 +177,17 @@ public class SocketConnectionPoolProvider implements SocketConnectionPool,
 			throw new IllegalArgumentException(
 					"The parameter host or port is not valid.");
 		final String hostAndPort = String.format("%s:%s", host, port);
-		final ConcurrentMap<String, SocketConnection> transports = this.transportPool_
-				.get(hostAndPort);
-
-		for (final SocketConnection socketConnection : transports.values()) {
-			if (socketConnection.isIdle())
-				return socketConnection;
-		}
+		SocketConnection availableSocketConnection = internalAcquireSocketConnection(hostAndPort);
+		if (!(availableSocketConnection == null))
+			return availableSocketConnection;
 
 		final int hostConnectionLimit = this.clientBuildingConfig_
 				.getHostConnectionLimit();
 
-		final int currentHostConnectionCount = transports.size();
+		final ConcurrentMap<String, SocketConnection> transports = this.transportPool_
+				.get(hostAndPort);
 
+		final int currentHostConnectionCount = transports.size();
 		if (currentHostConnectionCount < hostConnectionLimit) {
 			// create a new connection.
 			final SocketConnection newSocketConnection = createSocketConnection(
@@ -196,13 +195,60 @@ public class SocketConnectionPoolProvider implements SocketConnectionPool,
 			transports.putIfAbsent(newSocketConnection.getIdentity(),
 					newSocketConnection);
 			if (newSocketConnection.isIdle())
-				return newSocketConnection;
+				availableSocketConnection = newSocketConnection;
 		} else
+			availableSocketConnection = blockingUnitlAcquireSocketConnection(hostAndPort);
+
+		if (availableSocketConnection == null)
 			throw new NullPointerException(
 					"No idle socket connection is obtained.");
 
-		return null;
+		return availableSocketConnection;
+	}
 
+	private SocketConnection internalAcquireSocketConnection(final String key) {
+		final ConcurrentMap<String/* host:port */, SocketConnection> transports = this.transportPool_
+				.get(key);
+		SocketConnection returnSocketConnection = null;
+
+		for (final SocketConnection socketConnection : transports.values()) {
+			if (socketConnection.isIdle())
+				returnSocketConnection = socketConnection;
+		}
+
+		return returnSocketConnection;
+	}
+
+	private SocketConnection blockingUnitlAcquireSocketConnection(
+			final String key) {
+		// try acquire once
+		SocketConnection returnSocketConnection = internalAcquireSocketConnection(key);
+
+		if (LOGGER_ != null) {
+			if (LOGGER_.isInfoEnabled())
+				LOGGER_.info("blocking acquire idle socket connection start...");
+		}
+		if (returnSocketConnection == null) {
+			REPEAT_ACQUIRE: while (true) {
+				returnSocketConnection = internalAcquireSocketConnection(key);
+				if (returnSocketConnection == null) {
+					LockSupport.parkNanos(1000000000L);
+					continue REPEAT_ACQUIRE;
+				} else {
+					if (LOGGER_ != null) {
+						if (LOGGER_.isInfoEnabled())
+							LOGGER_.info("blocking acquire idle socket connection successful.");
+					}
+					break REPEAT_ACQUIRE;
+				}
+			}
+		}
+
+		if (LOGGER_ != null) {
+			if (LOGGER_.isInfoEnabled())
+				LOGGER_.info("blocking acquire idle socket connection end...");
+		}
+		return returnSocketConnection;
 	}
 
 	@Override
