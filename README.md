@@ -8,7 +8,7 @@ build service to client example:
 				.safeBuild(ThriftProtocolClientBuilder
 						.get()
 						.codec(FACTORY)
-						.dest("zk!bw-kvm-cy-01.dns.ganji.com:2181!/soa/services/as.postlimitservice.thrift!0")
+						.dest("zk!bw-kvm-cy-01.dns.ganji.com:2181!/soa/services/test.postlimitservice.thrift!0")
 						.hostConnectionLimit(2)
 						.logger(LoggerFactory
 								.getLogger("thrift-post-limit-service-client")));
