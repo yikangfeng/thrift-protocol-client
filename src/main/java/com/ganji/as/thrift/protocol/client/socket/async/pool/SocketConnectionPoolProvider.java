@@ -25,8 +25,8 @@ import com.ganji.as.thrift.protocol.server.nodes.discovery.ServerNodesDiscoveryP
  * @author yikangfeng
  * @date 2015年7月21日
  */
-public class SocketConnectionPoolProvider implements SocketConnectionPool,
-		AutoCloseable {
+public class SocketConnectionPoolProvider extends AbstractSocketConnectionPool
+		implements AutoCloseable {
 	final private Logger LOGGER_;
 	final private ClientBuildingConfig clientBuildingConfig_;
 	final private AtomicBoolean isReady_ = new AtomicBoolean(false);
@@ -143,7 +143,7 @@ public class SocketConnectionPoolProvider implements SocketConnectionPool,
 	}
 
 	@Override
-	public SocketConnection getSocketConnection(final LoadBalance loadBalance,
+	public SocketConnection getInternalSocketConnection(final LoadBalance loadBalance,
 			final ThriftClientInvocation clientInvocation) throws Throwable {
 		// TODO Auto-generated method stub
 		SocketConnection socketConnection = null;
@@ -170,7 +170,7 @@ public class SocketConnectionPoolProvider implements SocketConnectionPool,
 	}
 
 	@Override
-	public SocketConnection getSocketConnectionByHostAndPort(final String host,
+	public SocketConnection getInternalSocketConnectionByHostAndPort(final String host,
 			final int port) throws Throwable {
 		// TODO Auto-generated method stub
 		if (host == null || host.isEmpty() || port <= 0)
