@@ -143,7 +143,8 @@ public class SocketConnectionPoolProvider extends AbstractSocketConnectionPool
 	}
 
 	@Override
-	public SocketConnection getInternalSocketConnection(final LoadBalance loadBalance,
+	public SocketConnection getInternalSocketConnection(
+			final LoadBalance loadBalance,
 			final ThriftClientInvocation clientInvocation) throws Throwable {
 		// TODO Auto-generated method stub
 		SocketConnection socketConnection = null;
@@ -162,6 +163,9 @@ public class SocketConnectionPoolProvider extends AbstractSocketConnectionPool
 							"Load balancing strategy selected node is {%s}",
 							selectedServerNode));
 			}
+			if (selectedServerNode == null)
+				return socketConnection;
+
 			socketConnection = getSocketConnectionByHostAndPort(
 					selectedServerNode.getHost(), selectedServerNode.getPort());
 
@@ -170,8 +174,8 @@ public class SocketConnectionPoolProvider extends AbstractSocketConnectionPool
 	}
 
 	@Override
-	public SocketConnection getInternalSocketConnectionByHostAndPort(final String host,
-			final int port) throws Throwable {
+	public SocketConnection getInternalSocketConnectionByHostAndPort(
+			final String host, final int port) throws Throwable {
 		// TODO Auto-generated method stub
 		if (host == null || host.isEmpty() || port <= 0)
 			throw new IllegalArgumentException(
@@ -190,6 +194,10 @@ public class SocketConnectionPoolProvider extends AbstractSocketConnectionPool
 		final int currentHostConnectionCount = transports.size();
 		if (currentHostConnectionCount < hostConnectionLimit) {
 			// create a new connection.
+			if (this.LOGGER_ != null) {
+				if (this.LOGGER_.isInfoEnabled())
+					this.LOGGER_.info("create a new socket connection.");
+			}
 			final SocketConnection newSocketConnection = createSocketConnection(
 					host, port);
 			transports.putIfAbsent(newSocketConnection.getIdentity(),
@@ -209,6 +217,10 @@ public class SocketConnectionPoolProvider extends AbstractSocketConnectionPool
 	private SocketConnection internalAcquireSocketConnection(final String key) {
 		final ConcurrentMap<String/* host:port */, SocketConnection> transports = this.transportPool_
 				.get(key);
+		if (transports == null)
+			this.transportPool_.putIfAbsent(key,
+					new ConcurrentHashMap<String, SocketConnection>());
+
 		SocketConnection returnSocketConnection = null;
 
 		for (final SocketConnection socketConnection : transports.values()) {
@@ -232,7 +244,7 @@ public class SocketConnectionPoolProvider extends AbstractSocketConnectionPool
 			REPEAT_ACQUIRE: while (true) {
 				returnSocketConnection = internalAcquireSocketConnection(key);
 				if (returnSocketConnection == null) {
-					LockSupport.parkNanos(1000000000L);
+					LockSupport.parkNanos(10000000L);
 					continue REPEAT_ACQUIRE;
 				} else {
 					if (LOGGER_ != null) {
