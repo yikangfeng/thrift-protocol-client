@@ -38,17 +38,23 @@ public class ClientBuildingConfig {
 
 	private LoadBalance loadBalancePolicy;
 
-	private int hostConnectionCoreSize = 1;// per host
+	private int hostConnectionCoreSize = 4;// per host initial size
 
-	private int hostConnectionLimit = 2;
+	private int hostConnectionMinIdle = 4;
 
-	private int hostConnectionIdleTime;
+	private int hostConnectionMaxIdle = 8;
+
+	private int hostConnectionLimit = 8;// max total or max active
 
 	private int hostConnectionMaxWaiters;
 
+	private int maxWaitHostConnectionMillis = Integer.MAX_VALUE;// Millisecond
+
+	private int hostConnectionIdleTime;
+
 	private int hostConnectionMaxIdleTime;
 
-	private int hostConnectionMaxLifeTime;
+	private int hostConnectionMaxLifeTime = 1800;// seconds
 
 	private int hostConnectionBufferSize;
 
@@ -195,4 +201,29 @@ public class ClientBuildingConfig {
 	public void setLoadBalancePolicy(LoadBalance loadBalancePolicy) {
 		this.loadBalancePolicy = loadBalancePolicy;
 	}
+
+	public int getHostConnectionMaxIdle() {
+		return hostConnectionMaxIdle;
+	}
+
+	public void setHostConnectionMaxIdle(int hostConnectionMaxIdle) {
+		this.hostConnectionMaxIdle = hostConnectionMaxIdle;
+	}
+
+	public int getMaxWaitHostConnectionMillis() {
+		return maxWaitHostConnectionMillis;
+	}
+
+	public void setMaxWaitHostConnectionMillis(int maxWaitHostConnectionMillis) {
+		this.maxWaitHostConnectionMillis = maxWaitHostConnectionMillis;
+	}
+
+	public int getHostConnectionMinIdle() {
+		return hostConnectionMinIdle;
+	}
+
+	public void setHostConnectionMinIdle(int hostConnectionMinIdle) {
+		this.hostConnectionMinIdle = hostConnectionMinIdle;
+	}
+
 }

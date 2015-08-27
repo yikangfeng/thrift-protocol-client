@@ -7,6 +7,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -64,7 +65,10 @@ public class ServerNodesDiscoveryProvider implements ServerNodesDiscovery {
 				logger_.info("nodes discovery start...");
 		}
 
-		final List<String> serverNodes = registerPathNodeDataChangeWatcher(zkNodePath_);
+		List<String> serverNodes = registerPathNodeDataChangeWatcher(zkNodePath_);
+		if (serverNodes == null)
+			serverNodes = new ArrayList<>();
+
 		List<ServerNode> newestServerNodes = new ArrayList<>();
 		for (final String nodeKey : serverNodes) {
 			final byte[] nodeValueBytes = zkClient_.getData().forPath(
@@ -78,8 +82,7 @@ public class ServerNodesDiscoveryProvider implements ServerNodesDiscovery {
 		}
 		if (serverNodes != null)
 			serverNodes.clear();
-
-		synchronized (this) {
+		synchronized (this.serverNodes_) {
 			this.serverNodes_.clear();
 			this.serverNodes_.addAll(newestServerNodes);
 
@@ -90,7 +93,6 @@ public class ServerNodesDiscoveryProvider implements ServerNodesDiscovery {
 							this.serverNodes_.size()));
 			}
 		}
-
 		if (logger_ != null) {
 			if (logger_.isInfoEnabled())
 				logger_.info("nodes discovery end...");
@@ -150,8 +152,8 @@ public class ServerNodesDiscoveryProvider implements ServerNodesDiscovery {
 			try {
 				zkClient_ = CuratorFrameworkFactory.builder()
 						.connectString(zkHost_).namespace(zkNamespace_)
-						.retryPolicy(new ExponentialBackoffRetry(1000, 3))
-						.connectionTimeoutMs(20000).build();
+						.retryPolicy(new ExponentialBackoffRetry(1000, 60))
+						.connectionTimeoutMs(2 * 3600 * 1000).build();
 				zkClient_.getConnectionStateListenable().addListener(
 						new ConnectionStateListener() {
 
@@ -218,7 +220,7 @@ public class ServerNodesDiscoveryProvider implements ServerNodesDiscovery {
 	@Override
 	public List<ServerNode> nodes() {
 		// TODO Auto-generated method stub
-		synchronized (this) {
+		synchronized (this.serverNodes_) {
 			return Collections.unmodifiableList(this.serverNodes_);
 		}
 	}
@@ -236,8 +238,17 @@ public class ServerNodesDiscoveryProvider implements ServerNodesDiscovery {
 	static public void main(String[] args) {
 		try {
 			String zkFullPath1 = "zk!bw-kvm-cy-01.dns.ganji.com:2181!/soa/services/as.postlimitservice.thrift!0";
-			ServerNodesDiscoveryProvider.FACTORY.createServerNodesDiscovery(
-					new ClientBuildingConfig()).nodesDiscovery(zkFullPath1);
+			ServerNodesDiscovery nodesDiscovery = ServerNodesDiscoveryProvider.FACTORY
+					.createServerNodesDiscovery(new ClientBuildingConfig());
+			System.out.println(nodesDiscovery.nodesDiscovery(zkFullPath1));
+
+			while (true) {
+				System.out.println("current nodes size:"
+						+ nodesDiscovery.nodes().size());
+				for (final ServerNode serverNode : nodesDiscovery.nodes())
+					System.out.println(serverNode);
+				TimeUnit.SECONDS.sleep(2);
+			}
 		} catch (Throwable e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

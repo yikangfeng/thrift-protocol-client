@@ -24,15 +24,17 @@ public class ThriftProtocolClientBuilding extends ThriftProtocolClientBuilder {
 	private ClientBuildingConfig clientBuildingConfig_;
 	static final private LoadBalance defaultLoadBalancePolicy_ = new ConsistentHashLoadBalance();
 	static final private ThriftProtocolClientRetryPolicy defaultRetryPolicy_ = new ThriftProtocolSessionRetryPolicy();
+
 	ThriftProtocolClientBuilding() {
 		this.clientBuildingConfig_ = new ClientBuildingConfig();
-		this.clientBuildingConfig_.setLoadBalancePolicy(defaultLoadBalancePolicy_);// set
-																		// default
-																		// load
-																		// balance
-																		// policy.
+		this.clientBuildingConfig_
+				.setLoadBalancePolicy(defaultLoadBalancePolicy_);// set
+		// default
+		// load
+		// balance
+		// policy.
 		this.clientBuildingConfig_.setRetryPolicy(defaultRetryPolicy_);
-		
+
 	}
 
 	@Override
@@ -115,6 +117,25 @@ public class ThriftProtocolClientBuilding extends ThriftProtocolClientBuilder {
 	}
 
 	@Override
+	public ThriftProtocolClientBuilder hostConnectionMinIdle(int value) {
+		// TODO Auto-generated method stub
+		if (value <= 0)
+			throw new IllegalArgumentException("The parameter value must be >0");
+		clientBuildingConfig_.setHostConnectionMinIdle(value);
+		return this;
+	}
+	
+	@Override
+	public ThriftProtocolClientBuilder hostConnectionMaxIdle(int value) {
+		// TODO Auto-generated method stub
+		if (value <= 0)
+			throw new IllegalArgumentException(
+					"The parameter value must be >0");
+		clientBuildingConfig_.setHostConnectionMaxIdle(value);
+		return this;
+	}
+
+	@Override
 	public ThriftProtocolClientBuilder hostConnectionLimit(final int value) {
 		// TODO Auto-generated method stub
 		if (value <= 0)
@@ -137,7 +158,15 @@ public class ThriftProtocolClientBuilding extends ThriftProtocolClientBuilder {
 		clientBuildingConfig_.setHostConnectionMaxWaiters(nWaiters);
 		return this;
 	}
-
+	
+	@Override
+	public ThriftProtocolClientBuilder maxWaitHostConnectionMillis(
+			int maxWaitMillis) {
+		// TODO Auto-generated method stub
+		clientBuildingConfig_.setMaxWaitHostConnectionMillis(maxWaitMillis);
+		return this;
+	}
+	
 	@Override
 	public ThriftProtocolClientBuilder hostConnectionMaxIdleTime(
 			final int duration) {
@@ -182,7 +211,7 @@ public class ThriftProtocolClientBuilding extends ThriftProtocolClientBuilder {
 		clientBuildingConfig_.setLoadBalancePolicy(loadBalancePolicy);
 		return this;
 	}
-
+	
 	@Override
 	<REQ, REP> ThriftProtocolService<REQ, REP> build() throws Throwable {
 		// TODO Auto-generated method stub

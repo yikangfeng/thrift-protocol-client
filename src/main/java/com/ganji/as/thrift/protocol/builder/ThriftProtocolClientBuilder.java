@@ -63,11 +63,20 @@ public abstract class ThriftProtocolClientBuilder {
 	abstract public ThriftProtocolClientBuilder hostConnectionCoreSize(
 			final int value);
 
+	abstract public ThriftProtocolClientBuilder hostConnectionMinIdle(
+			final int value);// min idle size
+	
+	abstract public ThriftProtocolClientBuilder hostConnectionMaxIdle(
+			final int value);// max idle size
+	
 	abstract public ThriftProtocolClientBuilder hostConnectionLimit(
 			final int value);// max size
 
 	abstract public ThriftProtocolClientBuilder hostConnectionMaxWaiters(
 			final int nWaiters);
+	
+	abstract public ThriftProtocolClientBuilder maxWaitHostConnectionMillis(
+			final int maxWaitMillis);
 
 	abstract public ThriftProtocolClientBuilder hostConnectionBufferSize(
 			final int bufferSize);

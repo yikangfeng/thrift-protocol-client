@@ -15,13 +15,14 @@ import org.apache.thrift.transport.TNonblockingTransport;
  * @author yikangfeng
  * @date 2015年7月21日
  */
-public class SocketConnectionProxy extends AbstractQueuedSynchronizer implements
+class SocketConnectionProxy extends AbstractQueuedSynchronizer implements
 		SocketConnection {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 2713764671634469626L;
 	final private String identity_;
+	private long connectionLastUsedInMs;
 	private boolean alive_;
 	final private String hostName_;
 	final private int port_;
@@ -110,6 +111,14 @@ public class SocketConnectionProxy extends AbstractQueuedSynchronizer implements
 	@Override
 	public int getPort() {
 		return this.port_;
+	}
+
+	public long getConnectionLastUsedInMs() {
+		return connectionLastUsedInMs;
+	}
+
+	public void setConnectionLastUsedInMs(long connectionLastUsedInMs) {
+		this.connectionLastUsedInMs = connectionLastUsedInMs;
 	}
 
 }

@@ -4,6 +4,7 @@
 package com.ganji.as.thrift.protocol.client.future;
 
 import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
 
 import com.ganji.as.thrift.protocol.service.intf.ThriftProtocolFunction;
 
@@ -20,6 +21,9 @@ public abstract class Future<V> {
 	abstract public ThriftProtocolFunction<?, ?> getCallbackFunction();
 
 	abstract public V get() throws Throwable;
+
+	abstract public V get(final long timeout, final TimeUnit unit)
+			throws Throwable;
 
 	static public <V> Future<V> value(final V v) {
 		return new Future<V>() {
@@ -47,6 +51,12 @@ public abstract class Future<V> {
 			public ThriftProtocolFunction<?, ?> getCallbackFunction() {
 				// TODO Auto-generated method stub
 				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public V get(long timeout, TimeUnit unit) throws Throwable {
+				// TODO Auto-generated method stub
+				return null;
 			}
 
 		};
@@ -79,6 +89,12 @@ public abstract class Future<V> {
 			public ThriftProtocolFunction<?, ?> getCallbackFunction() {
 				// TODO Auto-generated method stub
 				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public V get(long timeout, TimeUnit unit) throws Throwable {
+				// TODO Auto-generated method stub
+				return null;
 			}
 
 		};

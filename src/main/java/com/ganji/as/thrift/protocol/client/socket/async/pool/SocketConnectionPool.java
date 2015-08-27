@@ -15,6 +15,8 @@ public interface SocketConnectionPool {
 
 	void removeSocketConnection(final SocketConnection socketConnection);
 
+	void returnSocketConnection(final SocketConnection socketConnection);
+	
 	SocketConnection getSocketConnection(final LoadBalance loadBalance,
 			final ThriftClientInvocation clientInvocation) throws Throwable;
 

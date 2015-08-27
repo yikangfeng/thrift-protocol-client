@@ -31,7 +31,7 @@ import com.ganji.as.thrift.protocol.client.intf.ThriftProtocolClientRetryPolicy;
 import com.ganji.as.thrift.protocol.client.request.ThriftClientRequest;
 import com.ganji.as.thrift.protocol.client.socket.async.pool.SocketConnection;
 import com.ganji.as.thrift.protocol.client.socket.async.pool.SocketConnectionPool;
-import com.ganji.as.thrift.protocol.client.socket.async.pool.SocketConnectionPoolProvider;
+import com.ganji.as.thrift.protocol.client.socket.async.pool.SocketConnectionPoolFactory;
 import com.ganji.as.thrift.protocol.service.intf.ThriftProtocolFunction;
 import com.ganji.as.thrift.protocol.service.intf.ThriftProtocolService;
 import com.ganji.as.thrift.protocol.client.request.ThriftClientInvocation;
@@ -86,7 +86,7 @@ public class ThriftProtocolServe<REQ, REP> implements
 			throws Throwable {
 		this.clientBuildingConfig_ = clientBuildingConfig;
 		LOGGER = clientBuildingConfig_.getLogger();
-		clientSocketConnectionPool_ = SocketConnectionPoolProvider.FACTORY
+		clientSocketConnectionPool_ = SocketConnectionPoolFactory.factory()
 				.createSocketConnectionPool(clientBuildingConfig);
 		protocolFactory_ = clientBuildingConfig.getCodec();
 		loadBalance_ = clientBuildingConfig.getLoadBalancePolicy();
@@ -235,23 +235,39 @@ public class ThriftProtocolServe<REQ, REP> implements
 			@Override
 			public REP get() throws Throwable {
 				// TODO Auto-generated method stub
+				return getValue(-1, null);
+			}
+
+			@Override
+			public REP get(final long timeout, final TimeUnit unit)
+					throws Throwable {
+				// TODO Auto-generated method stub
+				if (unit == null)
+					throw new NullPointerException();
+
+				return getValue(timeout, unit);
+			}
+
+			public REP getValue(final long timeout, final TimeUnit unit)
+					throws Throwable {
 				if (this.callbackFunction_ == null)
 					throw new NullPointerException(
 							"The callback function not registered.");
 
 				REQ response = null;
 				try {
-					response = futureSession_.get();
+					response = ((timeout == -1 && unit == null) ? futureSession_
+							.get() : futureSession_.get(timeout, unit));
 				} catch (final Throwable t) {
 					if (LOGGER != null) {
 						if (LOGGER.isInfoEnabled())
 							LOGGER.info(String
-									.format("By async method call service response time is:%d (ms)",
+									.format("By async method call service error,response time is:%d (ms)",
 											(System.currentTimeMillis() - this.startRequestTime_)));
 					}
 					// retry
-					retryPolicy_
-							.retry(this, clientBuildingConfig_.getRetries());
+					retryPolicy_.retry(this,
+							clientBuildingConfig_.getRetries(), timeout, unit);
 
 					try {
 						response = this.futureSession_.get();
@@ -268,7 +284,7 @@ public class ThriftProtocolServe<REQ, REP> implements
 
 				if (ret == null)
 					throw new NullPointerException(
-							"Remote server response result is null.");
+							"The remote server response result is null.");
 
 				if (Future.class.isInstance(ret)) {// Nested future
 
@@ -354,6 +370,7 @@ public class ThriftProtocolServe<REQ, REP> implements
 													// Auto-generated
 													// catch block
 													ignored.printStackTrace();
+													onError(ignored);
 												}
 											}
 										}
@@ -374,14 +391,21 @@ public class ThriftProtocolServe<REQ, REP> implements
 									.format("Gets the server response to the error, reasons:%s",
 											e));
 					}
-					socketConnectionProxy.setAlive(false);
-					socketConnectionProxy.close();
-					clientSocketConnectionPool_
-							.removeSocketConnection(socketConnectionProxy);
+					if (!(socketConnectionProxy == null)) {
+						socketConnectionProxy.setAlive(false);
+						socketConnectionProxy.close();
+						clientSocketConnectionPool_
+								.removeSocketConnection(socketConnectionProxy);
+						socketConnectionProxy = null;
+					}
 					throw (Exception) e;
 				} finally {
 					if (socketConnectionProxy != null)// Must be close
+					{
 						socketConnectionProxy.close();
+						clientSocketConnectionPool_
+								.returnSocketConnection(socketConnectionProxy);
+					}
 				}
 			}
 

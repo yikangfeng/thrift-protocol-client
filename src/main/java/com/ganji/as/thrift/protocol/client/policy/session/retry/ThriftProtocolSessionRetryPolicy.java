@@ -3,6 +3,8 @@
  */
 package com.ganji.as.thrift.protocol.client.policy.session.retry;
 
+import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +25,8 @@ public class ThriftProtocolSessionRetryPolicy implements
 	}
 
 	@Override
-	public void retry(final Future<?> future, final int retries) {
+	public void retry(final Future<?> future, final int retries,
+			final long timeout, final TimeUnit unit) {
 		// TODO Auto-generated method stub
 		int _retries = 0;
 		if (LOGGER_ != null) {
@@ -39,8 +42,12 @@ public class ThriftProtocolSessionRetryPolicy implements
 							++_retries));
 			}
 			try {
-				((Future<?>) future.flatMap(future.getCallbackFunction()))
-						.getFutureSession().get();
+				if (timeout == -1 && unit == null)
+					((Future<?>) future.flatMap(future.getCallbackFunction()))
+							.getFutureSession().get();
+				else
+					((Future<?>) future.flatMap(future.getCallbackFunction()))
+							.getFutureSession().get(timeout, unit);
 			} catch (final Throwable _t) {
 				continue;// try again.
 			}

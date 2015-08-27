@@ -3,6 +3,8 @@
  */
 package com.ganji.as.thrift.protocol.client.intf;
 
+import java.util.concurrent.TimeUnit;
+
 import com.ganji.as.thrift.protocol.client.future.Future;
 
 /**
@@ -11,5 +13,5 @@ import com.ganji.as.thrift.protocol.client.future.Future;
  */
 public interface ThriftProtocolClientRetryPolicy {
 	void retry(final Future<?> future,
-			final int retries);
+			final int retries,final long timeout,final TimeUnit unit);
 }
