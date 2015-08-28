@@ -48,7 +48,7 @@ public class ClientBuildingConfig {
 
 	private int hostConnectionMaxWaiters;
 
-	private int maxWaitHostConnectionMillis = Integer.MAX_VALUE;// Millisecond
+	private int maxWaitHostConnectionMillis = 10;// Millisecond
 
 	private int hostConnectionIdleTime;
 
