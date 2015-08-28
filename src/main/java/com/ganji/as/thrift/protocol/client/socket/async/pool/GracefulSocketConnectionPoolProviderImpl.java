@@ -170,6 +170,10 @@ class GracefulSocketConnectionPoolProviderImpl extends
 					.getHostConnectionMaxIdle());
 		socketConnectionPoolConfig.setMaxWaitMillis(this.clientBuildingConfig_
 				.getMaxWaitHostConnectionMillis());
+		socketConnectionPoolConfig.setNumTestsPerEvictionRun(Integer.MAX_VALUE);
+		socketConnectionPoolConfig.setMinEvictableIdleTimeMillis(this.clientBuildingConfig_
+				.getHostConnectionMinIdle());
+		socketConnectionPoolConfig.setTimeBetweenEvictionRunsMillis(1 * 60000L);
 		return socketConnectionPoolConfig;
 	}
 

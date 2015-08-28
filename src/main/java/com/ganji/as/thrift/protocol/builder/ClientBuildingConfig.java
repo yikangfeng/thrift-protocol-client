@@ -48,9 +48,9 @@ public class ClientBuildingConfig {
 
 	private int hostConnectionMaxWaiters;
 
-	private int maxWaitHostConnectionMillis = 10;// Millisecond
+	private int maxWaitHostConnectionMillis = -1;// Millisecond
 
-	private int hostConnectionIdleTime;
+	private int hostConnectionIdleTime = 30 * 60 * 1000;// Millisecond
 
 	private int hostConnectionMaxIdleTime;
 

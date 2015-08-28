@@ -228,7 +228,7 @@ public class ThriftProtocolServeTest extends TestCase {
 				}
 			});
 
-			/*es.submit(new Runnable() {
+			es.submit(new Runnable() {
 
 				public void run() {
 
@@ -289,7 +289,7 @@ public class ThriftProtocolServeTest extends TestCase {
 
 				}
 
-			});*/
+			});
 
 			/*
 			 * es.submit(new Runnable() {
